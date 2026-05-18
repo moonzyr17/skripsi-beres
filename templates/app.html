@@ -298,6 +298,12 @@ input[type="file"]::file-selector-button {
       <div id="bulk-input" style="display: none;">
         <label for="cite-bulk">Daftar DOI / Judul (1 per baris)</label>
         <textarea id="cite-bulk" placeholder="10.1234/abcd.5678&#10;Metode penelitian kualitatif&#10;https://doi.org/10.5678/efgh"></textarea>
+        <div style="margin-top: 0.75rem; display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
+          <label style="display: inline-flex; align-items: center; gap: 0.5rem; font-weight: 400; margin: 0; cursor: pointer; font-size: 0.9rem;">
+            <input type="checkbox" id="sort-alpha" checked style="width: auto; margin: 0; cursor: pointer;" />
+            <span>Urutkan alfabetis (sesuai standar APA/Harvard)</span>
+          </label>
+        </div>
         <div style="margin-top: 1rem;">
           <button class="btn btn-primary" id="btn-cite-bulk">
             <span id="cite-bulk-btn-text">Generate Semua</span>
@@ -325,7 +331,14 @@ input[type="file"]::file-selector-button {
         <div class="result-label">Hasil Bulk</div>
         <div id="bulk-result-list"></div>
         <div class="result-actions">
-          <button class="btn btn-accent" id="btn-copy-bulk">Copy Semua</button>
+          <button class="btn btn-accent" id="btn-copy-bulk">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            Copy Semua
+          </button>
+          <button class="btn btn-primary" id="btn-download-bulk">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Download .docx
+          </button>
         </div>
       </div>
     </div>
@@ -335,7 +348,7 @@ input[type="file"]::file-selector-button {
   <section class="panel" id="panel-format">
     <div class="card">
       <h2>Format Skripsi Auto-Fix</h2>
-      <p class="subtitle">Upload file .docx skripsi lo. Pilih template kampus. Download hasil yang udah rapi.</p>
+      <p class="subtitle">Upload file .docx skripsi kamu. Pilih template kampus. Download hasil yang udah rapi.</p>
 
       <label for="tpl-select">Template Kampus</label>
       <select id="tpl-select">
@@ -439,7 +452,7 @@ document.getElementById('btn-cite').addEventListener('click', async () => {
 
     if (data.alternatives && data.alternatives.length > 0) {
       const alts = data.alternatives.map(a => `• ${a.title} (${a.year})`).join('\n');
-      showAlert('cite-info', 'Mungkin lo cari yang lain?\n' + alts);
+      showAlert('cite-info', 'Mungkin kamu cari yang lain?\n' + alts);
     }
   } catch (e) {
     showAlert('cite-error', 'Network error: ' + e.message);
@@ -456,12 +469,13 @@ document.getElementById('btn-cite-bulk').addEventListener('click', async () => {
   document.getElementById('bulk-result').classList.remove('show');
   const btnText = document.getElementById('cite-bulk-btn-text');
   btnText.innerHTML = '<span class="spinner"></span>';
+  const sort = document.getElementById('sort-alpha').checked;
 
   try {
     const r = await fetch('/api/cite-bulk', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({text, style: currentStyle}),
+      body: JSON.stringify({text, style: currentStyle, sort}),
     });
     const data = await r.json();
     if (!r.ok) {
@@ -505,8 +519,49 @@ document.getElementById('btn-copy-bulk').addEventListener('click', () => {
   const text = Array.from(items).map(i => i.textContent).join('\n\n');
   navigator.clipboard.writeText(text);
   const btn = document.getElementById('btn-copy-bulk');
-  btn.textContent = '✓ Copied';
-  setTimeout(() => btn.textContent = 'Copy Semua', 1500);
+  const orig = btn.innerHTML;
+  btn.innerHTML = '✓ Copied';
+  setTimeout(() => btn.innerHTML = orig, 1500);
+});
+
+// ---------- Download bulk as .docx ----------
+document.getElementById('btn-download-bulk').addEventListener('click', async () => {
+  const items = document.querySelectorAll('#bulk-result-list .bulk-item:not(.error) .bulk-item-text');
+  const citations = Array.from(items).map(i => i.textContent);
+  if (citations.length === 0) {
+    showAlert('cite-error', 'Tidak ada sitasi yang berhasil di-generate');
+    return;
+  }
+  const btn = document.getElementById('btn-download-bulk');
+  const orig = btn.innerHTML;
+  btn.innerHTML = '<span class="spinner"></span> Memproses...';
+
+  try {
+    const r = await fetch('/api/cite-export-docx', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({citations, style: currentStyle}),
+    });
+    if (!r.ok) {
+      const data = await r.json().catch(() => ({error: 'Gagal export'}));
+      showAlert('cite-error', data.error || 'Gagal export');
+      return;
+    }
+    const blob = await r.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `daftar_pustaka_${currentStyle}.docx`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    btn.innerHTML = '✓ Downloaded';
+    setTimeout(() => btn.innerHTML = orig, 1500);
+  } catch (e) {
+    showAlert('cite-error', 'Network error: ' + e.message);
+    btn.innerHTML = orig;
+  }
 });
 
 // ---------- Template info ----------

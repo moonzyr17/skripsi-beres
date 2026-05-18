@@ -321,6 +321,83 @@ KAMPUS_TEMPLATES = {
         "margin_left": 4.0,
         "first_line_indent": 1.27,
     },
+    "its": {
+        "name": "ITS (Sepuluh Nopember)",
+        "font": "Times New Roman",
+        "size": 12,
+        "line_spacing": 1.5,
+        "margin_top": 3.0,
+        "margin_right": 3.0,
+        "margin_bottom": 3.0,
+        "margin_left": 4.0,
+        "first_line_indent": 1.27,
+    },
+    "unair": {
+        "name": "Universitas Airlangga",
+        "font": "Times New Roman",
+        "size": 12,
+        "line_spacing": 2.0,
+        "margin_top": 3.0,
+        "margin_right": 3.0,
+        "margin_bottom": 3.0,
+        "margin_left": 4.0,
+        "first_line_indent": 1.27,
+    },
+    "unpad": {
+        "name": "Universitas Padjadjaran",
+        "font": "Times New Roman",
+        "size": 12,
+        "line_spacing": 1.5,
+        "margin_top": 3.0,
+        "margin_right": 3.0,
+        "margin_bottom": 3.0,
+        "margin_left": 4.0,
+        "first_line_indent": 1.27,
+    },
+    "undip": {
+        "name": "Universitas Diponegoro",
+        "font": "Times New Roman",
+        "size": 12,
+        "line_spacing": 1.5,
+        "margin_top": 3.0,
+        "margin_right": 3.0,
+        "margin_bottom": 3.0,
+        "margin_left": 4.0,
+        "first_line_indent": 1.27,
+    },
+    "ub": {
+        "name": "Universitas Brawijaya",
+        "font": "Times New Roman",
+        "size": 12,
+        "line_spacing": 1.5,
+        "margin_top": 3.0,
+        "margin_right": 3.0,
+        "margin_bottom": 3.0,
+        "margin_left": 4.0,
+        "first_line_indent": 1.27,
+    },
+    "uns": {
+        "name": "Universitas Sebelas Maret",
+        "font": "Times New Roman",
+        "size": 12,
+        "line_spacing": 2.0,
+        "margin_top": 4.0,
+        "margin_right": 3.0,
+        "margin_bottom": 3.0,
+        "margin_left": 4.0,
+        "first_line_indent": 1.27,
+    },
+    "usu": {
+        "name": "Universitas Sumatera Utara",
+        "font": "Times New Roman",
+        "size": 12,
+        "line_spacing": 2.0,
+        "margin_top": 3.0,
+        "margin_right": 3.0,
+        "margin_bottom": 3.0,
+        "margin_left": 4.0,
+        "first_line_indent": 1.27,
+    },
     "telkom": {
         "name": "Telkom University",
         "font": "Times New Roman",
@@ -486,6 +563,7 @@ def api_cite_bulk():
     data = request.get_json(silent=True) or {}
     text = (data.get("text") or "").strip()
     style = (data.get("style") or "apa").lower()
+    sort_alpha = bool(data.get("sort", False))
 
     if not text:
         return jsonify({"error": "Input tidak boleh kosong"}), 400
@@ -493,7 +571,9 @@ def api_cite_bulk():
         return jsonify({"error": f"Style tidak dikenal: {style}"}), 400
 
     lines = [l.strip() for l in text.splitlines() if l.strip()]
-    results = []
+
+    # First pass: resolve every line to a Crossref work (so we can sort)
+    resolved = []
     for idx, line in enumerate(lines, start=1):
         doi_match = DOI_REGEX.search(line)
         work = None
@@ -503,20 +583,106 @@ def api_cite_bulk():
             cands = search_crossref_by_title(line, limit=1)
             if cands:
                 work = cands[0]
+        resolved.append({"input_idx": idx, "input": line, "work": work})
 
-        if not work:
-            results.append({"index": idx, "input": line, "ok": False, "error": "Tidak ditemukan"})
+    # Optional alphabetical sort by first author family name (works only)
+    if sort_alpha:
+        def sort_key(item):
+            w = item["work"]
+            if not w:
+                return (1, "")  # unresolved goes last
+            auths = _authors(w)
+            if not auths:
+                return (0, _title(w).lower())
+            return (0, auths[0][0].lower())
+        resolved.sort(key=sort_key)
+
+    # Second pass: format with stable numbering after sort
+    results = []
+    for n, item in enumerate(resolved, start=1):
+        if not item["work"]:
+            results.append({
+                "index": n,
+                "input": item["input"],
+                "ok": False,
+                "error": "Tidak ditemukan",
+            })
             continue
-
         formatter = FORMATTERS[style]
         if style in ("ieee", "vancouver"):
-            citation = formatter(work, idx)
+            citation = formatter(item["work"], n)
         else:
-            citation = formatter(work)
+            citation = formatter(item["work"])
+        results.append({
+            "index": n,
+            "input": item["input"],
+            "ok": True,
+            "citation": citation,
+        })
 
-        results.append({"index": idx, "input": line, "ok": True, "citation": citation})
+    return jsonify({
+        "results": results,
+        "style": style,
+        "count": len(results),
+        "sorted": sort_alpha,
+    })
 
-    return jsonify({"results": results, "style": style, "count": len(results)})
+
+@app.route("/api/cite-export-docx", methods=["POST"])
+def api_cite_export_docx():
+    """Export bulk citations to a properly-formatted .docx with hanging indent."""
+    data = request.get_json(silent=True) or {}
+    citations = data.get("citations") or []
+    style = (data.get("style") or "apa").upper()
+
+    if not citations:
+        return jsonify({"error": "Tidak ada sitasi untuk di-export"}), 400
+
+    doc = Document()
+
+    # Page setup (UI-style default — Times New Roman 12, 1.5 spacing)
+    for section in doc.sections:
+        section.top_margin = Cm(3.0)
+        section.right_margin = Cm(3.0)
+        section.bottom_margin = Cm(3.0)
+        section.left_margin = Cm(4.0)
+
+    # Title heading
+    title = doc.add_heading("DAFTAR PUSTAKA", level=1)
+    title.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    for run in title.runs:
+        run.font.name = "Times New Roman"
+        run.font.size = Pt(14)
+        run.font.bold = True
+        run.font.color.rgb = RGBColor(0x09, 0x09, 0x0B)
+
+    doc.add_paragraph()  # spacer
+
+    # Each citation as paragraph with hanging indent (1.27 cm)
+    for cite_text in citations:
+        if not cite_text or not str(cite_text).strip():
+            continue
+        p = doc.add_paragraph()
+        p.paragraph_format.left_indent = Cm(1.27)
+        p.paragraph_format.first_line_indent = Cm(-1.27)
+        p.paragraph_format.line_spacing_rule = WD_LINE_SPACING.MULTIPLE
+        p.paragraph_format.line_spacing = 1.5
+        p.paragraph_format.space_after = Pt(6)
+        p.paragraph_format.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+        run = p.add_run(str(cite_text).strip())
+        run.font.name = "Times New Roman"
+        run.font.size = Pt(12)
+
+    out = io.BytesIO()
+    doc.save(out)
+    out.seek(0)
+
+    return send_file(
+        out,
+        as_attachment=True,
+        download_name=f"daftar_pustaka_{style.lower()}.docx",
+        mimetype="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    )
 
 
 @app.route("/api/format-docx", methods=["POST"])
