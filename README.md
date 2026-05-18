@@ -6,7 +6,7 @@
 [![Made for Mahasiswa](https://img.shields.io/badge/Made_for-Mahasiswa-EC4899?style=flat)]()
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
 
-**Demo:** https://skripsi-beres.vercel.app · **Audience:** mahasiswa tingkat akhir
+**Demo:** https://skripsi-beres.vercel.app · 
 
 ---
 
