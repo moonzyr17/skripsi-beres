@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>App — Skripsi Beres</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Crimson+Pro:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+:root {
+  --color-primary: #18181B;
+  --color-on-primary: #FFFFFF;
+  --color-secondary: #3F3F46;
+  --color-accent: #EC4899;
+  --color-background: #FAFAFA;
+  --color-foreground: #09090B;
+  --color-muted: #E8ECF0;
+  --color-border: #E4E4E7;
+  --color-destructive: #DC2626;
+  --color-success: #16A34A;
+  --color-ring: #18181B;
+  --font-heading: 'Crimson Pro', Georgia, serif;
+  --font-body: 'Atkinson Hyperlegible', system-ui, sans-serif;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: var(--font-body);
+  background: var(--color-background);
+  color: var(--color-foreground);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+a { color: inherit; text-decoration: none; }
+
+.nav {
+  background: white; border-bottom: 1px solid var(--color-border);
+  position: sticky; top: 0; z-index: 50;
+}
+.nav-inner {
+  max-width: 1200px; margin: 0 auto; padding: 1rem 1.5rem;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.brand { font-family: var(--font-heading); font-size: 1.4rem; font-weight: 700; }
+.brand-dot { color: var(--color-accent); }
+.back-link {
+  font-size: 0.9rem; color: var(--color-secondary);
+  display: inline-flex; gap: 0.4rem; align-items: center;
+  transition: color 150ms ease;
+}
+.back-link:hover { color: var(--color-foreground); }
+
+.app-container {
+  max-width: 1200px; margin: 0 auto; padding: 2.5rem 1.5rem;
+}
+.app-header { margin-bottom: 2.5rem; }
+.app-header h1 {
+  font-family: var(--font-heading); font-size: 2.5rem; font-weight: 700;
+  letter-spacing: -0.02em; margin-bottom: 0.5rem;
+}
+.app-header p { color: var(--color-secondary); font-size: 1.05rem; }
+
+.tabs {
+  display: flex; gap: 0; border-bottom: 1px solid var(--color-border);
+  margin-bottom: 2rem; overflow-x: auto;
+}
+.tab {
+  padding: 1rem 1.5rem; cursor: pointer;
+  font-family: var(--font-body); font-weight: 700; font-size: 1rem;
+  background: none; border: none; color: var(--color-secondary);
+  border-bottom: 3px solid transparent; transition: all 150ms ease;
+  white-space: nowrap;
+}
+.tab:hover { color: var(--color-foreground); }
+.tab.active {
+  color: var(--color-foreground); border-bottom-color: var(--color-accent);
+}
+.tab-num {
+  display: inline-block;
+  background: var(--color-muted); color: var(--color-secondary);
+  padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.75rem;
+  margin-right: 0.5rem; font-weight: 700;
+}
+.tab.active .tab-num { background: var(--color-foreground); color: white; }
+
+.panel { display: none; }
+.panel.active { display: block; }
+
+.card {
+  background: white; border: 1px solid var(--color-border); border-radius: 12px;
+  padding: 2rem; margin-bottom: 1.5rem;
+}
+.card h2 {
+  font-family: var(--font-heading); font-size: 1.5rem; font-weight: 700;
+  letter-spacing: -0.01em; margin-bottom: 0.5rem;
+}
+.card p.subtitle { color: var(--color-secondary); margin-bottom: 1.5rem; font-size: 0.95rem; }
+
+.form-row {
+  display: grid; grid-template-columns: 1fr auto auto; gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+@media (max-width: 700px) {
+  .form-row { grid-template-columns: 1fr; }
+}
+.form-row.bulk { grid-template-columns: 1fr; }
+
+label {
+  display: block; font-size: 0.85rem; font-weight: 700;
+  margin-bottom: 0.4rem; color: var(--color-foreground);
+}
+
+input[type="text"], textarea, select {
+  width: 100%; padding: 0.75rem 1rem; font-size: 1rem;
+  font-family: var(--font-body); color: var(--color-foreground);
+  background: white; border: 1px solid var(--color-border);
+  border-radius: 6px; transition: border-color 150ms ease;
+}
+textarea { resize: vertical; min-height: 140px; font-family: 'Courier New', monospace; font-size: 0.9rem; }
+input[type="text"]:focus, textarea:focus, select:focus {
+  outline: none; border-color: var(--color-foreground);
+}
+input[type="file"] {
+  width: 100%; padding: 0.75rem; font-family: var(--font-body);
+  border: 1px dashed var(--color-border); border-radius: 6px;
+  background: var(--color-background); cursor: pointer;
+}
+input[type="file"]::file-selector-button {
+  background: var(--color-foreground); color: white;
+  border: none; padding: 0.5rem 1rem; border-radius: 4px;
+  font-family: var(--font-body); font-weight: 700; cursor: pointer;
+  margin-right: 1rem;
+}
+
+.btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  gap: 0.5rem; padding: 0.75rem 1.5rem; border-radius: 6px;
+  font-family: var(--font-body); font-weight: 700; font-size: 0.95rem;
+  cursor: pointer; transition: transform 150ms ease, background 150ms ease, opacity 150ms ease;
+  border: 1px solid transparent;
+}
+.btn-primary { background: var(--color-foreground); color: white; }
+.btn-primary:hover:not(:disabled) { transform: translateY(-1px); background: #000; }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-accent { background: var(--color-accent); color: white; }
+.btn-accent:hover:not(:disabled) { background: #db2777; }
+.btn-secondary {
+  background: white; color: var(--color-foreground);
+  border-color: var(--color-border);
+}
+.btn-secondary:hover { border-color: var(--color-foreground); }
+.btn svg { width: 16px; height: 16px; }
+
+.toggle-row {
+  display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1rem;
+}
+.toggle {
+  padding: 0.5rem 1rem; border: 1px solid var(--color-border);
+  border-radius: 6px; background: white; font-size: 0.85rem; font-weight: 700;
+  cursor: pointer; transition: all 150ms ease;
+  font-family: var(--font-body); color: var(--color-secondary);
+}
+.toggle:hover { border-color: var(--color-foreground); }
+.toggle.active {
+  background: var(--color-foreground); color: white;
+  border-color: var(--color-foreground);
+}
+
+.result {
+  margin-top: 1.5rem; padding: 1.5rem;
+  background: var(--color-background); border: 1px solid var(--color-border);
+  border-radius: 8px; display: none;
+}
+.result.show { display: block; }
+.result-label {
+  font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.1em;
+  color: var(--color-accent); font-weight: 700; margin-bottom: 0.75rem;
+}
+.result pre, .result-text {
+  font-family: 'Courier New', monospace; font-size: 0.95rem;
+  line-height: 1.6; color: var(--color-foreground);
+  white-space: pre-wrap; word-break: break-word;
+}
+.result-actions {
+  display: flex; gap: 0.5rem; margin-top: 1rem; flex-wrap: wrap;
+}
+
+.alert {
+  padding: 1rem 1.25rem; border-radius: 6px;
+  font-size: 0.9rem; margin-bottom: 1rem; display: none;
+}
+.alert.show { display: block; }
+.alert-error { background: #FEE2E2; color: #991B1B; border: 1px solid #FECACA; }
+.alert-success { background: #DCFCE7; color: #166534; border: 1px solid #BBF7D0; }
+.alert-info { background: #DBEAFE; color: #1E40AF; border: 1px solid #BFDBFE; }
+
+.spinner {
+  display: inline-block; width: 16px; height: 16px;
+  border: 2px solid rgba(255,255,255,0.3); border-top-color: white;
+  border-radius: 50%; animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.bulk-results {
+  display: none; margin-top: 1.5rem;
+}
+.bulk-results.show { display: block; }
+.bulk-item {
+  padding: 1rem; background: var(--color-background);
+  border: 1px solid var(--color-border); border-radius: 6px;
+  margin-bottom: 0.5rem;
+}
+.bulk-item-num {
+  font-size: 0.75rem; color: var(--color-secondary); font-weight: 700;
+  margin-bottom: 0.4rem;
+}
+.bulk-item-text {
+  font-family: 'Courier New', monospace; font-size: 0.9rem;
+  white-space: pre-wrap; word-break: break-word;
+}
+.bulk-item.error { background: #FEF2F2; border-color: #FECACA; }
+.bulk-item.error .bulk-item-text { color: #991B1B; }
+
+.template-info {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0.5rem;
+  margin-top: 1rem; padding: 1rem; background: var(--color-background);
+  border: 1px solid var(--color-border); border-radius: 6px;
+  font-size: 0.85rem;
+}
+.template-info-item {}
+.template-info-key { color: var(--color-secondary); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; }
+.template-info-val { font-weight: 700; color: var(--color-foreground); margin-top: 0.2rem; }
+
+:focus-visible { outline: 2px solid var(--color-ring); outline-offset: 3px; border-radius: 4px; }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="/" class="brand">Skripsi Beres<span class="brand-dot">.</span></a>
+    <a href="/" class="back-link">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+      Kembali ke Beranda
+    </a>
+  </div>
+</nav>
+
+<div class="app-container">
+  <div class="app-header">
+    <h1>Workflow App</h1>
+    <p>Pilih tool, input data, copy atau download hasilnya. Simpel.</p>
+  </div>
+
+  <div class="tabs" role="tablist">
+    <button class="tab active" data-panel="pustaka" role="tab">
+      <span class="tab-num">01</span>Daftar Pustaka
+    </button>
+    <button class="tab" data-panel="format" role="tab">
+      <span class="tab-num">02</span>Format Skripsi
+    </button>
+  </div>
+
+  <!-- =============== PUSTAKA PANEL =============== -->
+  <section class="panel active" id="panel-pustaka">
+    <div class="card">
+      <h2>Daftar Pustaka Generator</h2>
+      <p class="subtitle">Input DOI, URL, atau judul jurnal. Pilih format. Copy hasilnya.</p>
+
+      <label>Format Sitasi</label>
+      <div class="toggle-row" id="style-toggles">
+        <button class="toggle active" data-style="apa">APA</button>
+        <button class="toggle" data-style="mla">MLA</button>
+        <button class="toggle" data-style="ieee">IEEE</button>
+        <button class="toggle" data-style="harvard">Harvard</button>
+        <button class="toggle" data-style="vancouver">Vancouver</button>
+      </div>
+
+      <label for="cite-mode">Mode Input</label>
+      <div class="toggle-row" id="mode-toggles">
+        <button class="toggle active" data-mode="single">Single</button>
+        <button class="toggle" data-mode="bulk">Bulk (Banyak Sekaligus)</button>
+      </div>
+
+      <!-- Single -->
+      <div id="single-input">
+        <label for="cite-query">DOI / URL / Judul Jurnal</label>
+        <div class="form-row">
+          <input type="text" id="cite-query" placeholder="10.1234/abcd.5678  atau  Metode penelitian kualitatif Sutopo" />
+          <button class="btn btn-primary" id="btn-cite">
+            <span id="cite-btn-text">Generate</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Bulk -->
+      <div id="bulk-input" style="display: none;">
+        <label for="cite-bulk">Daftar DOI / Judul (1 per baris)</label>
+        <textarea id="cite-bulk" placeholder="10.1234/abcd.5678&#10;Metode penelitian kualitatif&#10;https://doi.org/10.5678/efgh"></textarea>
+        <div style="margin-top: 1rem;">
+          <button class="btn btn-primary" id="btn-cite-bulk">
+            <span id="cite-bulk-btn-text">Generate Semua</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="alert alert-error" id="cite-error"></div>
+      <div class="alert alert-info" id="cite-info"></div>
+
+      <!-- Single result -->
+      <div class="result" id="cite-result">
+        <div class="result-label" id="cite-result-label">APA · Hasil</div>
+        <div class="result-text" id="cite-result-text"></div>
+        <div class="result-actions">
+          <button class="btn btn-accent" id="btn-copy">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            Copy
+          </button>
+        </div>
+      </div>
+
+      <!-- Bulk result -->
+      <div class="bulk-results" id="bulk-result">
+        <div class="result-label">Hasil Bulk</div>
+        <div id="bulk-result-list"></div>
+        <div class="result-actions">
+          <button class="btn btn-accent" id="btn-copy-bulk">Copy Semua</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- =============== FORMAT PANEL =============== -->
+  <section class="panel" id="panel-format">
+    <div class="card">
+      <h2>Format Skripsi Auto-Fix</h2>
+      <p class="subtitle">Upload file .docx skripsi lo. Pilih template kampus. Download hasil yang udah rapi.</p>
+
+      <label for="tpl-select">Template Kampus</label>
+      <select id="tpl-select">
+        {% for key, tpl in templates.items() %}
+          <option value="{{ key }}">{{ tpl.name }}</option>
+        {% endfor %}
+      </select>
+
+      <div class="template-info" id="tpl-info"></div>
+
+      <div style="margin-top: 1.5rem;">
+        <label for="docx-file">File .docx</label>
+        <input type="file" id="docx-file" accept=".docx" />
+      </div>
+
+      <div style="margin-top: 1.5rem;">
+        <button class="btn btn-primary" id="btn-format">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          <span id="format-btn-text">Format & Download</span>
+        </button>
+      </div>
+
+      <div class="alert alert-error" id="format-error" style="margin-top: 1rem;"></div>
+      <div class="alert alert-success" id="format-success" style="margin-top: 1rem;"></div>
+    </div>
+  </section>
+</div>
+
+<script>
+const TEMPLATES = {{ templates | tojson }};
+
+// ---------- Tab switching ----------
+document.querySelectorAll('.tab').forEach(t => {
+  t.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+    t.classList.add('active');
+    const panelId = t.dataset.panel;
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    document.getElementById('panel-' + panelId).classList.add('active');
+  });
+});
+
+// ---------- Style toggles ----------
+let currentStyle = 'apa';
+document.querySelectorAll('#style-toggles .toggle').forEach(b => {
+  b.addEventListener('click', () => {
+    document.querySelectorAll('#style-toggles .toggle').forEach(x => x.classList.remove('active'));
+    b.classList.add('active');
+    currentStyle = b.dataset.style;
+  });
+});
+
+// ---------- Mode toggles ----------
+let currentMode = 'single';
+document.querySelectorAll('#mode-toggles .toggle').forEach(b => {
+  b.addEventListener('click', () => {
+    document.querySelectorAll('#mode-toggles .toggle').forEach(x => x.classList.remove('active'));
+    b.classList.add('active');
+    currentMode = b.dataset.mode;
+    document.getElementById('single-input').style.display = currentMode === 'single' ? 'block' : 'none';
+    document.getElementById('bulk-input').style.display = currentMode === 'bulk' ? 'block' : 'none';
+    hideAllAlerts();
+    document.getElementById('cite-result').classList.remove('show');
+    document.getElementById('bulk-result').classList.remove('show');
+  });
+});
+
+function hideAllAlerts() {
+  document.querySelectorAll('.alert').forEach(a => a.classList.remove('show'));
+}
+
+function showAlert(id, message) {
+  const el = document.getElementById(id);
+  el.textContent = message;
+  el.classList.add('show');
+}
+
+// ---------- Single cite ----------
+document.getElementById('btn-cite').addEventListener('click', async () => {
+  const query = document.getElementById('cite-query').value.trim();
+  if (!query) { showAlert('cite-error', 'Input tidak boleh kosong'); return; }
+  hideAllAlerts();
+  document.getElementById('cite-result').classList.remove('show');
+  const btnText = document.getElementById('cite-btn-text');
+  btnText.innerHTML = '<span class="spinner"></span>';
+
+  try {
+    const r = await fetch('/api/cite', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({query, style: currentStyle}),
+    });
+    const data = await r.json();
+    if (!r.ok) {
+      showAlert('cite-error', data.error || 'Gagal generate sitasi');
+      return;
+    }
+    document.getElementById('cite-result-label').textContent = currentStyle.toUpperCase() + ' · Hasil';
+    document.getElementById('cite-result-text').textContent = data.citation;
+    document.getElementById('cite-result').classList.add('show');
+
+    if (data.alternatives && data.alternatives.length > 0) {
+      const alts = data.alternatives.map(a => `• ${a.title} (${a.year})`).join('\n');
+      showAlert('cite-info', 'Mungkin lo cari yang lain?\n' + alts);
+    }
+  } catch (e) {
+    showAlert('cite-error', 'Network error: ' + e.message);
+  } finally {
+    btnText.textContent = 'Generate';
+  }
+});
+
+// ---------- Bulk cite ----------
+document.getElementById('btn-cite-bulk').addEventListener('click', async () => {
+  const text = document.getElementById('cite-bulk').value.trim();
+  if (!text) { showAlert('cite-error', 'Input tidak boleh kosong'); return; }
+  hideAllAlerts();
+  document.getElementById('bulk-result').classList.remove('show');
+  const btnText = document.getElementById('cite-bulk-btn-text');
+  btnText.innerHTML = '<span class="spinner"></span>';
+
+  try {
+    const r = await fetch('/api/cite-bulk', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({text, style: currentStyle}),
+    });
+    const data = await r.json();
+    if (!r.ok) {
+      showAlert('cite-error', data.error || 'Gagal generate bulk');
+      return;
+    }
+    const list = document.getElementById('bulk-result-list');
+    list.innerHTML = '';
+    data.results.forEach(item => {
+      const div = document.createElement('div');
+      div.className = 'bulk-item' + (item.ok ? '' : ' error');
+      div.innerHTML = `<div class="bulk-item-num">#${item.index}</div><div class="bulk-item-text">${
+        item.ok ? escapeHtml(item.citation) : '✗ ' + escapeHtml(item.input) + ' — ' + escapeHtml(item.error)
+      }</div>`;
+      list.appendChild(div);
+    });
+    document.getElementById('bulk-result').classList.add('show');
+  } catch (e) {
+    showAlert('cite-error', 'Network error: ' + e.message);
+  } finally {
+    btnText.textContent = 'Generate Semua';
+  }
+});
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+// ---------- Copy ----------
+document.getElementById('btn-copy').addEventListener('click', () => {
+  const text = document.getElementById('cite-result-text').textContent;
+  navigator.clipboard.writeText(text);
+  const btn = document.getElementById('btn-copy');
+  const orig = btn.innerHTML;
+  btn.innerHTML = '✓ Copied';
+  setTimeout(() => btn.innerHTML = orig, 1500);
+});
+
+document.getElementById('btn-copy-bulk').addEventListener('click', () => {
+  const items = document.querySelectorAll('#bulk-result-list .bulk-item:not(.error) .bulk-item-text');
+  const text = Array.from(items).map(i => i.textContent).join('\n\n');
+  navigator.clipboard.writeText(text);
+  const btn = document.getElementById('btn-copy-bulk');
+  btn.textContent = '✓ Copied';
+  setTimeout(() => btn.textContent = 'Copy Semua', 1500);
+});
+
+// ---------- Template info ----------
+function renderTemplateInfo(key) {
+  const tpl = TEMPLATES[key];
+  if (!tpl) return;
+  document.getElementById('tpl-info').innerHTML = `
+    <div class="template-info-item"><div class="template-info-key">Font</div><div class="template-info-val">${tpl.font}</div></div>
+    <div class="template-info-item"><div class="template-info-key">Ukuran</div><div class="template-info-val">${tpl.size} pt</div></div>
+    <div class="template-info-item"><div class="template-info-key">Spasi</div><div class="template-info-val">${tpl.line_spacing}</div></div>
+    <div class="template-info-item"><div class="template-info-key">Margin (T/R/B/L)</div><div class="template-info-val">${tpl.margin_top}/${tpl.margin_right}/${tpl.margin_bottom}/${tpl.margin_left} cm</div></div>
+  `;
+}
+document.getElementById('tpl-select').addEventListener('change', e => renderTemplateInfo(e.target.value));
+renderTemplateInfo(document.getElementById('tpl-select').value);
+
+// ---------- Format docx ----------
+document.getElementById('btn-format').addEventListener('click', async () => {
+  const fileInput = document.getElementById('docx-file');
+  if (!fileInput.files || fileInput.files.length === 0) {
+    showAlert('format-error', 'Pilih file .docx dulu');
+    return;
+  }
+  const file = fileInput.files[0];
+  if (!file.name.toLowerCase().endsWith('.docx')) {
+    showAlert('format-error', 'Hanya file .docx yang didukung');
+    return;
+  }
+  hideAllAlerts();
+  const btnText = document.getElementById('format-btn-text');
+  btnText.innerHTML = '<span class="spinner"></span> Memproses...';
+
+  const fd = new FormData();
+  fd.append('file', file);
+  fd.append('template', document.getElementById('tpl-select').value);
+
+  try {
+    const r = await fetch('/api/format-docx', {method: 'POST', body: fd});
+    if (!r.ok) {
+      const data = await r.json().catch(() => ({error: 'Gagal memproses file'}));
+      showAlert('format-error', data.error || 'Gagal memproses file');
+      return;
+    }
+    const blob = await r.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const baseName = file.name.replace(/\.docx$/i, '');
+    a.href = url;
+    a.download = baseName + '_formatted.docx';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    showAlert('format-success', '✓ File berhasil diformat dan ter-download');
+  } catch (e) {
+    showAlert('format-error', 'Network error: ' + e.message);
+  } finally {
+    btnText.textContent = 'Format & Download';
+  }
+});
+</script>
+
+</body>
+</html>

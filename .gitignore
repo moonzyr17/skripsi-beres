@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build / deploy
+.vercel/
+*.log
+
+# Environment
+.env
+.env.local
+
+# User uploads (just in case)
+uploads/
+*.tmp
